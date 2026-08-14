@@ -24,6 +24,24 @@ const app = Fastify({ logger: true });
 // Everything is queued and resolved when `listen()` runs.
 app.register(cors, { origin: true });
 
+// Tolerate empty JSON bodies (e.g. a POST with no payload): treat them as `{}`
+// instead of failing to parse.
+app.addContentTypeParser(
+  "application/json",
+  { parseAs: "string" },
+  (_req, body, done) => {
+    if (!body || (typeof body === "string" && body.trim() === "")) {
+      done(null, {});
+      return;
+    }
+    try {
+      done(null, JSON.parse(body as string));
+    } catch (err) {
+      done(err as Error, undefined);
+    }
+  },
+);
+
 /** Load a commander by id or fail with a 404. */
 async function requireCommander(id: string) {
   const commander = await commanderStore.get(id);

@@ -44,6 +44,7 @@ export class FlightScene extends Phaser.Scene {
   private hull = 100;
   private lastFire = 0;
   private lastSpawn = 0;
+  private spawnGraceUntil = 0;
   private dockable = false;
   private alive = true;
 
@@ -112,23 +113,25 @@ export class FlightScene extends Phaser.Scene {
       this.onEnemyHit(bullet as Ship, enemy as Ship);
     });
     this.physics.add.overlap(this.enemyBullets, this.player, (_p, bullet) => {
-      this.onPlayerHit(bullet as Ship, 8);
+      this.onPlayerHit(bullet as Ship, 6);
     });
     this.physics.add.overlap(this.enemies, this.player, (_p, enemy) => {
-      this.onPlayerHit(enemy as Ship, 14, true);
+      this.onPlayerHit(enemy as Ship, 10, true);
     });
 
-    this.bus.on("flight:configure", (cfg) => this.applyConfig(cfg));
-    this.bus.on("ui:requestDock", () => this.tryDock());
+    // Track subscriptions so a destroyed scene (e.g. after docking, or React
+    // 18 StrictMode's double-mount) does not leave stale listeners on the
+    // long-lived bus, which would otherwise double-process spawns and hull.
+    const offConfigure = this.bus.on("flight:configure", (cfg) => this.applyConfig(cfg));
+    const offDock = this.bus.on("ui:requestDock", () => this.tryDock());
+    const cleanup = () => {
+      offConfigure();
+      offDock();
+    };
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, cleanup);
+    this.events.once(Phaser.Scenes.Events.DESTROY, cleanup);
 
-    if (this.config) this.applyConfig(this.config);
     this.bus.emit("flight:message", "Flight systems online.");
-  }
-
-  /** React can push a config before `create`; stash it until we are ready. */
-  configure(cfg: FlightConfig): void {
-    this.config = cfg;
-    if (this.scene.isActive()) this.applyConfig(cfg);
   }
 
   private applyConfig(cfg: FlightConfig): void {
@@ -136,6 +139,9 @@ export class FlightScene extends Phaser.Scene {
     this.hull = cfg.hull;
     this.alive = true;
     this.dockable = false;
+    // Give the player a few seconds to orient before hostiles appear.
+    this.spawnGraceUntil = this.time.now + 4000;
+    this.lastSpawn = this.time.now;
 
     this.player.enableBody(true, WORLD_W / 2, WORLD_H / 2, true, true);
     this.player.setVelocity(0, 0);
@@ -277,12 +283,13 @@ export class FlightScene extends Phaser.Scene {
   }
 
   private handleEnemies(time: number, delta: number): void {
-    const maxEnemies = this.config ? Math.min(5, this.config.danger) : 0;
+    const maxEnemies = this.config ? Math.min(4, Math.ceil(this.config.danger / 1.5)) : 0;
     if (
       this.alive &&
       maxEnemies > 0 &&
+      time > this.spawnGraceUntil &&
       this.enemies.countActive(true) < maxEnemies &&
-      time > this.lastSpawn + 2600
+      time > this.lastSpawn + 3800
     ) {
       this.spawnEnemy();
       this.lastSpawn = time;

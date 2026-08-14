@@ -108,12 +108,21 @@ export function refuel(commander: Commander, amount: number): Commander {
   return commander;
 }
 
+const EMERGENCY_HULL = 20;
+
 /** Repair hull at 3 credits per point. */
 export function repair(commander: Commander): Commander {
   const missing = commander.maxHull - commander.hull;
   if (missing <= 0) return commander;
-  const cost = missing * 3;
   const affordablePoints = Math.min(missing, Math.floor(commander.credits / 3));
+
+  // Anti-soft-lock: a stranded, destroyed ship with too few credits gets a free
+  // emergency patch up to a minimal hull so it can always launch again.
+  if (commander.hull === 0 && affordablePoints < EMERGENCY_HULL) {
+    commander.hull = Math.min(commander.maxHull, EMERGENCY_HULL);
+    return commander;
+  }
+
   commander.credits -= affordablePoints * 3;
   commander.hull += affordablePoints;
   return commander;

@@ -274,11 +274,17 @@ export function App() {
                 <button onClick={() => setModal("system")}>System Info</button>
                 <button
                   className="primary"
+                  disabled={commander.hull <= 0}
                   onClick={() => system && commander && enterFlight(system, commander)}
                 >
                   Launch
                 </button>
               </div>
+              {commander.hull <= 0 && (
+                <div className="controls-hint">
+                  Hull destroyed. Visit the Shipyard to repair before launching.
+                </div>
+              )}
             </div>
           )}
 

@@ -63,7 +63,10 @@ export const api = {
       body: JSON.stringify({ amount }),
     }),
   repair: (id: string) =>
-    request<Commander>(`/api/commander/${id}/repair`, { method: "POST" }),
+    request<Commander>(`/api/commander/${id}/repair`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
   combat: (id: string, kills: number, damageTaken: number) =>
     request<Commander>(`/api/commander/${id}/combat`, {
       method: "POST",
