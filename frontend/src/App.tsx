@@ -15,6 +15,9 @@ type Mode = "title" | "flight" | "docked";
 type Modal = "market" | "map" | "system" | "services" | null;
 
 const SAVE_KEY = "spacefarer.commanderId";
+// The commander's home system is a safe haven with no hostiles, so new pilots
+// can learn to fly and dock before choosing to jump into more dangerous space.
+const STARTING_SYSTEM = 0;
 
 export function App() {
   const bus = useMemo(() => new EventBus(), []);
@@ -71,7 +74,7 @@ export function App() {
         system: sys,
         hull: cmdr.hull,
         maxHull: cmdr.maxHull,
-        danger: dangerFor(sys.government),
+        danger: sys.id === STARTING_SYSTEM ? 0 : dangerFor(sys.government),
       });
     },
     [bus],

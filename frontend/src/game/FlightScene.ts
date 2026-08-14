@@ -298,7 +298,7 @@ export class FlightScene extends Phaser.Scene {
       maxEnemies > 0 &&
       time > this.spawnGraceUntil &&
       this.enemies.countActive(true) < maxEnemies &&
-      time > this.lastSpawn + 3800
+      time > this.lastSpawn + 4800
     ) {
       this.spawnEnemy();
       this.lastSpawn = time;
@@ -325,9 +325,9 @@ export class FlightScene extends Phaser.Scene {
       this.physics.velocityFromRotation(angleToPlayer, speed, enemy.body.velocity);
 
       const cooldown = enemy.getData("fireAt") as number | undefined;
-      if (this.alive && dist < 420 && (cooldown === undefined || time > cooldown)) {
+      if (this.alive && dist < 400 && (cooldown === undefined || time > cooldown)) {
         this.fireEnemyBullet(enemy, angleToPlayer);
-        enemy.setData("fireAt", time + Phaser.Math.Between(1100, 2000));
+        enemy.setData("fireAt", time + Phaser.Math.Between(1500, 2600));
       }
     }
   }
