@@ -1,0 +1,23 @@
+{
+  "name": "spacefarer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An Elite-inspired procedural space trading game that runs in the browser with a backend galaxy service.",
+  "license": "MIT",
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace @spacefarer/shared && npm run build --workspace @spacefarer/backend && npm run build --workspace @spacefarer/frontend",
+    "dev": "concurrently -n backend,frontend -c blue,magenta \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "npm run dev --workspace @spacefarer/backend",
+    "dev:frontend": "npm run dev --workspace @spacefarer/frontend",
+    "test": "npm run test --workspace @spacefarer/shared",
+    "typecheck": "npm run typecheck --workspace @spacefarer/shared && npm run typecheck --workspace @spacefarer/backend && npm run typecheck --workspace @spacefarer/frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

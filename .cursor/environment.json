@@ -1,0 +1,13 @@
+{
+  "install": "npm install && npm run build --workspace @spacefarer/shared",
+  "terminals": [
+    {
+      "name": "backend",
+      "command": "npm run dev:backend"
+    },
+    {
+      "name": "frontend",
+      "command": "npm run dev:frontend"
+    }
+  ]
+}
