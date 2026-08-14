@@ -10,7 +10,14 @@ const PLAYER_MAX_SPEED = 320;
 const PLAYER_TURN = 220; // degrees / second
 const BULLET_SPEED = 520;
 const FIRE_COOLDOWN = 240; // ms
-const DOCK_RANGE = 90;
+const DOCK_RANGE = 110;
+const DOCK_SPEED = 110;
+// The player starts a short hop from the station so docking is achievable
+// within the enemy-spawn grace period, keeping the opening approachable.
+const STATION_X = 1200;
+const STATION_Y = 760;
+const PLAYER_X = 1200;
+const PLAYER_Y = 1080;
 
 type Ship = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
@@ -85,13 +92,13 @@ export class FlightScene extends Phaser.Scene {
     this.enemyBullets = this.physics.add.group({ defaultKey: "enemy-bullet", maxSize: 60 });
     this.enemies = this.physics.add.group();
 
-    this.player = this.physics.add.sprite(WORLD_W / 2, WORLD_H / 2, "player-ship");
+    this.player = this.physics.add.sprite(PLAYER_X, PLAYER_Y, "player-ship");
     this.player.setDamping(true).setDrag(0.7).setMaxVelocity(PLAYER_MAX_SPEED);
     this.player.setCollideWorldBounds(true);
     this.player.setDepth(10);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
-    this.station = this.add.image(WORLD_W / 2 + 360, WORLD_H / 2 - 220, "station").setDepth(5);
+    this.station = this.add.image(STATION_X, STATION_Y, "station").setDepth(5);
 
     const kb = this.input.keyboard!;
     this.cursors = kb.createCursorKeys();
@@ -140,10 +147,10 @@ export class FlightScene extends Phaser.Scene {
     this.alive = true;
     this.dockable = false;
     // Give the player a few seconds to orient before hostiles appear.
-    this.spawnGraceUntil = this.time.now + 4000;
+    this.spawnGraceUntil = this.time.now + 5000;
     this.lastSpawn = this.time.now;
 
-    this.player.enableBody(true, WORLD_W / 2, WORLD_H / 2, true, true);
+    this.player.enableBody(true, PLAYER_X, PLAYER_Y, true, true);
     this.player.setVelocity(0, 0);
     this.player.setAngle(-90);
     this.player.setActive(true).setVisible(true);
@@ -186,8 +193,8 @@ export class FlightScene extends Phaser.Scene {
     // Bake the backdrop into the decor group so it clears on reconfigure.
     this.decor.add(g);
 
-    // Reposition the station near the star for a consistent home base.
-    this.station.setPosition(340, 360);
+    // Keep the station at its fixed home position near the player's spawn.
+    this.station.setPosition(STATION_X, STATION_Y);
   }
 
   private tryDock(): void {
@@ -199,7 +206,7 @@ export class FlightScene extends Phaser.Scene {
       this.station.y,
     );
     const speed = this.player.body.velocity.length();
-    if (dist <= DOCK_RANGE && speed < 90) {
+    if (dist <= DOCK_RANGE && speed < DOCK_SPEED) {
       this.bus.emit("flight:dock", undefined);
       this.bus.emit("flight:message", "Docking clamps engaged.");
     } else if (dist <= DOCK_RANGE) {
@@ -228,7 +235,8 @@ export class FlightScene extends Phaser.Scene {
       this.station.x,
       this.station.y,
     );
-    const canDock = this.alive && dist <= DOCK_RANGE && this.player.body.velocity.length() < 90;
+    const canDock =
+      this.alive && dist <= DOCK_RANGE && this.player.body.velocity.length() < DOCK_SPEED;
     if (canDock !== this.dockable) {
       this.dockable = canDock;
       this.bus.emit("flight:dockable", canDock);
@@ -283,7 +291,8 @@ export class FlightScene extends Phaser.Scene {
   }
 
   private handleEnemies(time: number, delta: number): void {
-    const maxEnemies = this.config ? Math.min(4, Math.ceil(this.config.danger / 1.5)) : 0;
+    const danger = this.config?.danger ?? 0;
+    const maxEnemies = danger >= 4 ? 3 : danger >= 2 ? 2 : danger >= 1 ? 1 : 0;
     if (
       this.alive &&
       maxEnemies > 0 &&

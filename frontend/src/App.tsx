@@ -46,6 +46,14 @@ export function App() {
   useEffect(() => {
     systemRef.current = system;
   }, [system]);
+  // While docked, the HUD should reflect the authoritative commander hull
+  // (e.g. after repairing), not the last value the flight scene reported.
+  useEffect(() => {
+    if (mode === "docked" && commander) {
+      sceneHullRef.current = commander.hull;
+      setSceneHull(commander.hull);
+    }
+  }, [mode, commander]);
 
   const pushLog = useCallback((message: string) => {
     setLog((prev) => [message, ...prev].slice(0, 8));

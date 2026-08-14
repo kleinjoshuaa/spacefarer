@@ -39,6 +39,8 @@ export function Shipyard({
             type="number"
             min={0}
             step={0.5}
+            name="fuel-amount"
+            aria-label="Fuel amount in light years"
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value))}
             style={{ width: 80 }}

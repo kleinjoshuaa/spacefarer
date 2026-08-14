@@ -34,6 +34,8 @@ function MarketRow({
           <input
             type="number"
             min={1}
+            name={`qty-${good.id}`}
+            aria-label={`Quantity of ${good.name}`}
             value={qty}
             onChange={(e) => setQty(Number(e.target.value))}
             style={{ width: 56 }}
