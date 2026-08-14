@@ -278,8 +278,11 @@ export class FlightScene extends Phaser.Scene {
     if (Math.random() > 0.4) return;
     const behind = Phaser.Math.DegToRad(this.player.angle + 180);
     const spark = this.add
-      .image(this.player.x + Math.cos(behind) * 14, this.player.y + Math.sin(behind) * 14, "spark")
-      .setTint(0x3ad1e0)
+      .image(
+        this.player.x + Math.cos(behind) * 14,
+        this.player.y + Math.sin(behind) * 14,
+        "spark-cyan",
+      )
       .setDepth(9);
     this.tweens.add({
       targets: spark,
@@ -357,7 +360,7 @@ export class FlightScene extends Phaser.Scene {
     this.killBullet(bullet, this.playerBullets);
     const hp = ((enemy.getData("hp") as number) ?? 1) - 1;
     if (hp <= 0) {
-      this.explode(enemy.x, enemy.y, 0xf7c948);
+      this.explode(enemy.x, enemy.y, "spark-amber");
       enemy.destroy();
       this.bus.emit("flight:kill", 1);
       this.bus.emit("flight:message", "Hostile destroyed. Bounty credited.");
@@ -371,7 +374,7 @@ export class FlightScene extends Phaser.Scene {
   private onPlayerHit(source: Ship, damage: number, isShip = false): void {
     if (!this.alive) return;
     if (isShip) {
-      this.explode(source.x, source.y, 0xe5484d);
+      this.explode(source.x, source.y, "spark-red");
       source.destroy();
     } else {
       this.killBullet(source, this.enemyBullets);
@@ -384,15 +387,15 @@ export class FlightScene extends Phaser.Scene {
 
   private destroyPlayer(): void {
     this.alive = false;
-    this.explode(this.player.x, this.player.y, 0x3ad1e0);
+    this.explode(this.player.x, this.player.y, "spark-cyan");
     this.player.disableBody(true, true);
     this.bus.emit("flight:destroyed", undefined);
     this.bus.emit("flight:message", "Hull breach! Escape pod deployed.");
   }
 
-  private explode(x: number, y: number, color: number): void {
+  private explode(x: number, y: number, textureKey: string): void {
     for (let i = 0; i < 12; i++) {
-      const spark = this.add.image(x, y, "spark").setTint(color).setDepth(12);
+      const spark = this.add.image(x, y, textureKey).setDepth(12);
       const a = Math.random() * Math.PI * 2;
       const speed = Phaser.Math.Between(40, 160);
       this.tweens.add({

@@ -16,11 +16,7 @@ export function FlightStage({ bus }: { bus: EventBus }) {
     if (!containerRef.current) return;
 
     const game = new Phaser.Game({
-      // Use the Canvas renderer rather than AUTO/WebGL. The art is low-fidelity
-      // pixel art, and Canvas renders dynamically-spawned sprites (bullets,
-      // thruster sparks) reliably even in software-only / headless GL
-      // environments where the WebGL fallback misbehaves.
-      type: Phaser.CANVAS,
+      type: Phaser.AUTO,
       parent: containerRef.current,
       width: 320,
       height: 280,

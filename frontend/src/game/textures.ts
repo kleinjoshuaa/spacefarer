@@ -96,6 +96,10 @@ export function createGameTextures(scene: Phaser.Scene): void {
   // Simple square bullets in two colours.
   paint(scene, "bullet", ["WW", "WW"], { W: "#f7c948" }, 3);
   paint(scene, "enemy-bullet", ["WW", "WW"], { W: "#e5484d" }, 3);
-  // A 2x2 particle used for thruster trails and explosions.
+  // Pre-coloured particles for thruster trails and explosions. Using distinct
+  // textures avoids runtime tinting, which is costly on the Canvas renderer.
   paint(scene, "spark", ["W"], { W: "#ffffff" }, 3);
+  paint(scene, "spark-cyan", ["W"], { W: "#3ad1e0" }, 3);
+  paint(scene, "spark-amber", ["W"], { W: "#f7c948" }, 3);
+  paint(scene, "spark-red", ["W"], { W: "#e5484d" }, 3);
 }
