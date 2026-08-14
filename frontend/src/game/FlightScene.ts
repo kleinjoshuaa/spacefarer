@@ -47,6 +47,8 @@ export class FlightScene extends Phaser.Scene {
 
   private starsFar!: Phaser.GameObjects.TileSprite;
   private starsNear!: Phaser.GameObjects.TileSprite;
+  private stationMarker!: Phaser.GameObjects.Graphics;
+  private stationLabel!: Phaser.GameObjects.Text;
 
   private hull = 100;
   private lastFire = 0;
@@ -99,6 +101,14 @@ export class FlightScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
     this.station = this.add.image(STATION_X, STATION_Y, "station").setDepth(5);
+
+    // Off-screen station direction indicator, fixed to the camera.
+    this.stationMarker = this.add.graphics().setScrollFactor(0).setDepth(60);
+    this.stationLabel = this.add
+      .text(0, 0, "", { fontFamily: "monospace", fontSize: "10px", color: "#d453c9" })
+      .setScrollFactor(0)
+      .setDepth(60)
+      .setOrigin(0.5);
 
     const kb = this.input.keyboard!;
     this.cursors = kb.createCursorKeys();
@@ -227,6 +237,7 @@ export class FlightScene extends Phaser.Scene {
     if (this.alive) this.handlePlayer(time, delta);
     this.handleEnemies(time, delta);
     this.recycleBullets();
+    this.updateStationMarker();
 
     // Docking availability feedback.
     const dist = Phaser.Math.Distance.Between(
@@ -242,6 +253,49 @@ export class FlightScene extends Phaser.Scene {
       this.bus.emit("flight:dockable", canDock);
     }
     if (Phaser.Input.Keyboard.JustDown(this.keyDock)) this.tryDock();
+  }
+
+  /** Draw a magenta pointer to the station (bracket if visible, edge chevron otherwise). */
+  private updateStationMarker(): void {
+    const cam = this.cameras.main;
+    const vw = cam.width;
+    const vh = cam.height;
+    const sx = this.station.x - cam.scrollX;
+    const sy = this.station.y - cam.scrollY;
+    const dist = Math.round(
+      Phaser.Math.Distance.Between(this.player.x, this.player.y, this.station.x, this.station.y),
+    );
+    this.stationMarker.clear();
+
+    if (!this.alive) {
+      this.stationLabel.setText("");
+      return;
+    }
+
+    const onScreen = sx >= 0 && sx <= vw && sy >= 0 && sy <= vh;
+    if (onScreen) {
+      this.stationMarker.lineStyle(1, 0xd453c9, 1);
+      this.stationMarker.strokeRect(sx - 15, sy - 15, 30, 30);
+      this.stationLabel.setPosition(sx, sy + 24).setText(`STATION ${dist}`);
+    } else {
+      const cx = vw / 2;
+      const cy = vh / 2;
+      const angle = Math.atan2(sy - cy, sx - cx);
+      const margin = 18;
+      const ex = Phaser.Math.Clamp(sx, margin, vw - margin);
+      const ey = Phaser.Math.Clamp(sy, margin, vh - margin);
+      const size = 7;
+      this.stationMarker.fillStyle(0xd453c9, 1);
+      this.stationMarker.fillTriangle(
+        ex + Math.cos(angle) * size,
+        ey + Math.sin(angle) * size,
+        ex + Math.cos(angle + 2.5) * size,
+        ey + Math.sin(angle + 2.5) * size,
+        ex + Math.cos(angle - 2.5) * size,
+        ey + Math.sin(angle - 2.5) * size,
+      );
+      this.stationLabel.setPosition(ex, ey - 12).setText(`${dist}`);
+    }
   }
 
   private handlePlayer(time: number, delta: number): void {
