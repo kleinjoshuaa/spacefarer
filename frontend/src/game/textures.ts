@@ -37,21 +37,25 @@ function paint(
   canvas.refresh();
 }
 
-// Player ship: a green arrowhead interceptor pointing up.
+// Player ship: a green arrowhead interceptor pointing RIGHT (east), with the
+// engines on the left. Phaser treats an angle of 0 as facing +X, and the ship's
+// thrust and gunfire are both derived directly from its angle, so the art must
+// face east for the hull to line up with the direction of travel.
 const PLAYER = [
-  "....G....",
-  "...GWG...",
-  "...GWG...",
-  "..GGWGG..",
-  "..GGWGG..",
-  ".GGCWCGG.",
-  ".GCG.GCG.",
-  "GGG...GGG",
-  "G.F...F.G",
-  "..F...F..",
+  ".GG.......",
+  "..GGG.....",
+  "FFGCGGG...",
+  "...GCGGGG.",
+  "....WWWWWG",
+  "...GCGGGG.",
+  "FFGCGGG...",
+  "..GGG.....",
+  ".GG.......",
 ];
 
-// Enemy ship: a red hostile wedge pointing down (towards the player).
+// Enemy ship: a red hostile wedge pointing DOWN. Unlike the player, this art is
+// not east-facing, so FlightScene compensates by subtracting 90 degrees when it
+// aims an enemy at its target. Keep that offset in sync if this art is redrawn.
 const ENEMY = [
   "..R...R..",
   "..R...R..",
