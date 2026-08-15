@@ -1,13 +1,10 @@
 {
-  "install": "npm install && npm run build --workspace @spacefarer/shared",
-  "terminals": [
+  "install": "npm install && npm run build",
+  "start": "node backend/dist/server.js",
+  "ports": [
     {
-      "name": "backend",
-      "command": "npm run dev:backend"
-    },
-    {
-      "name": "frontend",
-      "command": "npm run dev:frontend"
+      "name": "spacefarer",
+      "port": 8787
     }
   ]
 }
